@@ -1,0 +1,11 @@
+# gcp-function.yaml (Cloud Functions)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: firewall-remediation-config
+data:
+  main.py: |
+    from gcp_firewall_remediation import main
+    
+    def firewall_remediation(request):
+        return main(request)
