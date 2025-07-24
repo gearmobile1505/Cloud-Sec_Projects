@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Security Group Auto-Remediation Lambda
+
+Parameters:
+  NotificationTopicArn:
+    Type: String
+    Description: SNS Topic ARN for notifications
+    Default: ""
+
+Resources:
+  SecurityGroupRemediationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: aws/
+      Handler: aws_sg_remediation.lambda_handler
+      Runtime: python3.12
+      Timeout: 300
+      Environment:
+        Variables:
+          NOTIFICATION_SNS_TOPIC: 
+            Ref: NotificationTopicArn
+      Policies:
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - ec2:DescribeSecurityGroups
+          - ec2:RevokeSecurityGroupIngress
+          - ec2:RevokeSecurityGroupEgress
+          - sns:Publish
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+          Resource: '*'
+      Events:
+        SNSTrigger:
+          Type: SNS
+          Properties:
+            Topic:
+              Ref: SecurityAlertTopic
+
+  SecurityAlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: security-group-alerts
